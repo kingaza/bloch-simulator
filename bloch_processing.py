@@ -58,17 +58,21 @@ def process_positions(dp):
     """
     if type(dp) == type(0.0) or type(dp) == type(0):
         return dp*np.ones(1), np.zeros(1), np.zeros(1), 1
-    if 3 == dp.shape[0]:
-        return dp[0], dp[1], dp[2], dp[0].shape
-    elif 2 == dp.shape[0]:
-        return dp[0], dp[1], np.zeros(dp.shape[1]), dp[0].shape
+    if 3 == dp.shape[1]:
+        return dp[:,0], dp[:,1], dp[:,2], dp.shape[0]
+    elif 2 == dp.shape[1]:
+        return dp[:,0], dp[:,1], np.zeros(dp.shape[0]), dp.shape[0]
     else:
-        return dp[0], np.zeros(dp.shape[1]), np.zeros(dp.shape[1]), dp[0].size 
+        return dp[:,0], np.zeros(dp.shape[0]), np.zeros(dp.shape[0]), dp.shape[0] 
 
 def process_magnetization(mx_0, my_0, mz_0, rf_length, freq_pos_count, mode):
     """
     Returns mx, my, and mz vectors allocated based on input parameters.
     """
+    if isinstance(mx_0, np.ndarray) and isinstance(my_0, np.ndarray) and isinstance(mz_0, np.ndarray):
+        mx_0 = mx_0.ravel()
+        my_0 = my_0.ravel()
+        mz_0 = mz_0.ravel()
     out_points = 1
     if 2 == mode:
         out_points = rf_length
@@ -76,7 +80,7 @@ def process_magnetization(mx_0, my_0, mz_0, rf_length, freq_pos_count, mode):
     mx = np.zeros(fn_out_points)
     my = np.zeros(fn_out_points)
     mz = np.zeros(fn_out_points)
-    if None != mx_0 and type(mx_0) != type(0.0) and type(mx_0) != type(0) and freq_pos_count == mx_0.size and freq_pos_count == my_0 and freq_pos_count == mz_0:
+    if None != mx_0 and type(mx_0) != type(0.0) and type(mx_0) != type(0) and freq_pos_count == mx_0.size and freq_pos_count == my_0.size and freq_pos_count == mz_0.size:
         for val in range(freq_pos_count):
             mx[val * out_points] = mx_0[val]
             my[val * out_points] = my_0[val]
@@ -87,3 +91,23 @@ def process_magnetization(mx_0, my_0, mz_0, rf_length, freq_pos_count, mode):
             my[val * out_points] = 0
             mz[val * out_points] = 1
     return mx, my, mz
+
+def reshape_matrices(mx, my, mz, ntime, n_pos, nf):
+    """
+    Reshapes output matrices.
+    """
+    if ntime > 1 and nf > 1 and n_pos > 1:
+        shape = (nf, n_pos, ntime)
+        mx.shape = shape
+        my.shape = shape
+        mz.shape = shape
+        return
+    else:
+        if ntime > 1:
+            shape = ((n_pos * nf), ntime)
+        else:
+            shape = (nf, n_pos)
+        mx.shape = shape
+        my.shape = shape
+        mz.shape = shape
+
